@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TeaTally - Classroom Tea Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        sage: {
+                            50: '#f4f7f4',
+                            100: '#e3eae3',
+                            200: '#c7d7c7',
+                            300: '#a3be9e',
+                            400: '#7a9f75',
+                            500: '#5b8256',
+                            600: '#466742',
+                            700: '#395236',
+                            800: '#30432e',
+                            900: '#283827',
+                        },
+                        amber: {
+                            50: '#fffbeb',
+                            100: '#fef3c7',
+                            200: '#fde68a',
+                            300: '#fcd34d',
+                            400: '#fbbf24',
+                            500: '#f59e0b',
+                            600: '#d97706',
+                            700: '#b45309',
+                            800: '#92400e',
+                            900: '#78350f',
+                        },
+                        indigoShift: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            800: '#3730a3',
+                            900: '#312e81',
+                        },
+                        cream: {
+                            50: '#fdfbf7',
+                            100: '#f7f3eb',
+                            200: '#eee5d5',
+                            300: '#e2d3bb',
+                        },
+                        earth: {
+                            800: '#2c221e',
+                            900: '#1c1512',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        serif: ['"Playfair Display"', 'serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(156, 163, 175, 0.3);
+            border-radius: 9999px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(156, 163, 175, 0.5);
+        }
+    </style>
+</head>
+<body class="bg-cream-50 dark:bg-earth-900 text-stone-800 dark:text-stone-100 min-h-screen font-sans transition-colors duration-300">
+
+    <header class="sticky top-0 z-30 bg-cream-100/80 dark:bg-earth-800/80 backdrop-blur-md border-b border-stone-200/60 dark:border-stone-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-sage-500 flex items-center justify-center text-white shadow-md shadow-sage-500/20">
+                    <i data-lucide="graduation-cap" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h1 class="font-serif font-bold text-xl tracking-wide text-sage-900 dark:text-sage-100">TeaTally</h1>
+                    <p class="text-xs text-stone-500 dark:text-stone-400 font-medium">Staff Members</p>
+                </div>
+            </div>
+
+            <!-- Header Controls -->
+            <div class="flex items-center space-x-2 sm:space-x-3">
+                <button id="openCanteenSlipBtn" class="px-3 py-1.5 rounded-lg bg-sage-600 text-white hover:bg-sage-700 text-xs font-semibold flex items-center gap-1.5 transition shadow-sm">
+                    <i data-lucide="receipt" class="w-3.5 h-3.5"></i> Canteen Slip
+                </button>
+                <button id="resetTodayBtn" class="px-3 py-1.5 rounded-lg bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900/50 hover:bg-rose-100 text-xs font-semibold flex items-center gap-1.5 transition">
+                    <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Reset Day
+                </button>
+                <button id="themeToggle" class="p-2 rounded-lg bg-stone-200/60 dark:bg-stone-800 text-stone-600 dark:text-stone-300 hover:bg-stone-300/60 transition" aria-label="Toggle theme">
+                    <i data-lucide="moon" id="themeIconDark" class="w-5 h-5 hidden"></i>
+                    <i data-lucide="sun" id="themeIconLight" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        
+        <!-- Classroom Banner -->
+        <div class="bg-white dark:bg-earth-800 rounded-2xl p-4 sm:p-5 border border-stone-200/80 dark:border-stone-700/50 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-3 w-full sm:w-auto">
+                <div class="p-3 bg-amber-100 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 rounded-xl">
+                    <i data-lucide="school" class="w-6 h-6"></i>
+                </div>
+                <div class="flex-1">
+                    <label class="text-[10px] font-bold text-stone-400 uppercase tracking-wider block">Class / Room Name</label>
+                    <input type="text" id="classNameInput" value="Classroom 10-A" class="font-serif text-lg font-bold bg-transparent text-stone-800 dark:text-stone-100 border-b border-dashed border-stone-300 dark:border-stone-600 focus:border-sage-500 focus:outline-none w-full sm:w-64" placeholder="Enter Class Name...">
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Stats Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <!-- Stat 1: Grand Total -->
+            <div class="bg-white dark:bg-earth-800 rounded-2xl p-5 border border-stone-200/80 dark:border-stone-700/50 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-medium text-stone-400 uppercase tracking-wider">Today's Grand Total</p>
+                    <h3 class="text-3xl font-bold text-stone-800 dark:text-stone-100 mt-1" id="grandTotalDisplay">0</h3>
+                    <p class="text-xs text-stone-400 mt-1">Total cups served today</p>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-sage-50 dark:bg-sage-950/50 text-sage-600 flex items-center justify-center">
+                    <i data-lucide="coffee" class="w-6 h-6"></i>
+                </div>
+            </div>
+
+            <!-- Stat 2: Morning Shift Total -->
+            <div class="bg-white dark:bg-earth-800 rounded-2xl p-5 border border-stone-200/80 dark:border-stone-700/50 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-medium text-amber-600 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1">
+                        <i data-lucide="sun" class="w-3.5 h-3.5"></i> Morning Break
+                    </p>
+                    <h3 class="text-3xl font-bold text-amber-600 dark:text-amber-400 mt-1" id="morningTotalDisplay">0</h3>
+                    <p class="text-xs text-stone-400 mt-1" id="morningBreakdownSub">Tea: 0 | Plain: 0 | Coffee: 0</p>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 flex items-center justify-center">
+                    <i data-lucide="coffee" class="w-6 h-6"></i>
+                </div>
+            </div>
+
+            <!-- Stat 3: Evening Shift Total -->
+            <div class="bg-white dark:bg-earth-800 rounded-2xl p-5 border border-stone-200/80 dark:border-stone-700/50 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-medium text-indigoShift-600 dark:text-indigoShift-500 uppercase tracking-wider flex items-center gap-1">
+                        <i data-lucide="moon" class="w-3.5 h-3.5"></i> Evening Break
+                    </p>
+                    <h3 class="text-3xl font-bold text-indigoShift-600 dark:text-indigoShift-500 mt-1" id="eveningTotalDisplay">0</h3>
+                    <p class="text-xs text-stone-400 mt-1" id="eveningBreakdownSub">Tea: 0 | Plain: 0 | Coffee: 0</p>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-indigoShift-50 dark:bg-indigoShift-900/30 text-indigoShift-600 dark:text-indigoShift-400 flex items-center justify-center">
+                    <i data-lucide="sunset" class="w-6 h-6"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-earth-800 rounded-3xl p-6 sm:p-8 shadow-sm border border-stone-200/80 dark:border-stone-700/50 space-y-6">
+            
+            <!-- Shift Tab Header -->
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pb-6 border-b border-stone-100 dark:border-stone-700/50">
+                <div>
+                    <h2 class="font-serif text-2xl font-bold text-stone-800 dark:text-stone-100">Tea Counters</h2>
+                    <p class="text-xs text-stone-500 dark:text-stone-400 mt-0.5">Select a break session and quickly count tea cups for your class</p>
+                </div>
+
+                <!-- Shift Toggle Buttons -->
+                <div class="flex bg-stone-100 dark:bg-earth-900 p-1.5 rounded-2xl border border-stone-200/80 dark:border-stone-700 w-full sm:w-auto">
+                    <button id="shiftMorningTab" class="flex-1 sm:flex-initial px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 bg-amber-500 text-white shadow-md">
+                        <i data-lucide="sun" class="w-4 h-4"></i> Morning Break
+                    </button>
+                    <button id="shiftEveningTab" class="flex-1 sm:flex-initial px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100">
+                        <i data-lucide="moon" class="w-4 h-4"></i> Evening Break
+                    </button>
+                </div>
+            </div>
+
+            <!-- Per-Shift Drink Counters Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="shiftDrinkCountersContainer">
+                <!-- Dynamic Content Rendered via JS -->
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- Shift Comparison & Weekly Chart (2 Columns) -->
+            <div class="lg:col-span-2 space-y-8">
+                <!-- Shift Comparison Breakdown Card -->
+                <div class="bg-white dark:bg-earth-800 rounded-3xl p-6 sm:p-8 shadow-sm border border-stone-200/80 dark:border-stone-700/50">
+                    <h2 class="font-serif text-xl font-bold text-stone-800 dark:text-stone-100 mb-1">Shift Breakdown Comparison</h2>
+                    <p class="text-xs text-stone-500 dark:text-stone-400 mb-6">Detailed drink breakdown by shift for today</p>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <!-- Morning Box -->
+                        <div class="p-5 rounded-2xl bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-900/40">
+                            <div class="flex items-center justify-between mb-4">
+                                <span class="font-bold text-sm text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
+                                    <i data-lucide="sun" class="w-4 h-4 text-amber-500"></i> Morning Shift
+                                </span>
+                                <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300" id="mShiftBadgeCount">0 cups</span>
+                            </div>
+                            <div class="space-y-2 text-xs" id="morningShiftDistribution">
+                                <!-- Dynamic JS -->
+                            </div>
+                        </div>
+
+                        <!-- Evening Box -->
+                        <div class="p-5 rounded-2xl bg-indigoShift-50/50 dark:bg-indigoShift-900/20 border border-indigoShift-200/60 dark:border-indigoShift-800/40">
+                            <div class="flex items-center justify-between mb-4">
+                                <span class="font-bold text-sm text-indigoShift-800 dark:text-indigoShift-300 flex items-center gap-1.5">
+                                    <i data-lucide="moon" class="w-4 h-4 text-indigoShift-500"></i> Evening Shift
+                                </span>
+                                <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-indigoShift-100 dark:bg-indigoShift-900/60 text-indigoShift-700 dark:text-indigoShift-300" id="eShiftBadgeCount">0 cups</span>
+                            </div>
+                            <div class="space-y-2 text-xs" id="eveningShiftDistribution">
+                                <!-- Dynamic JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Weekly Intake Chart Card -->
+                <div class="bg-white dark:bg-earth-800 rounded-3xl p-6 sm:p-8 shadow-sm border border-stone-200/80 dark:border-stone-700/50">
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <h2 class="font-serif text-xl font-bold text-stone-800 dark:text-stone-100">Weekly Shift Activity</h2>
+                            <p class="text-xs text-stone-500 dark:text-stone-400 mt-0.5">Morning vs Afternoon intake across the past 7 days</p>
+                        </div>
+                    </div>
+                    <div class="h-64 w-full">
+                        <canvas id="weeklyShiftChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Today's Log Panel (1 Column) -->
+            <div class="space-y-6">
+                <div class="bg-white dark:bg-earth-800 rounded-3xl p-6 shadow-sm border border-stone-200/80 dark:border-stone-700/50 flex flex-col h-full min-h-[420px]">
+                    <!-- Log Panel Header -->
+                    <div class="flex items-center justify-between pb-4 border-b border-stone-100 dark:border-stone-700/50">
+                        <div>
+                            <h2 class="font-serif text-lg font-bold text-stone-800 dark:text-stone-100">Today's Drink Log</h2>
+                            <p class="text-xs text-stone-400 mt-0.5">Real-time classroom activity</p>
+                        </div>
+                        <span id="logCountBadge" class="text-xs font-bold px-2.5 py-1 rounded-full bg-sage-100 text-sage-800 dark:bg-sage-950/60 dark:text-sage-300">
+                            0 Entries
+                        </span>
+                    </div>
+
+                    <!-- Log Filter Buttons -->
+                    <div class="flex gap-1.5 mt-3 mb-4 p-1 bg-stone-100 dark:bg-earth-900 rounded-xl">
+                        <button id="filterLogAll" onclick="setLogFilter('all')" class="flex-1 py-1 rounded-lg text-[11px] font-bold transition bg-stone-200 dark:bg-stone-700 text-stone-800 dark:text-stone-100">
+                            All
+                        </button>
+                        <button id="filterLogMorning" onclick="setLogFilter('morning')" class="flex-1 py-1 rounded-lg text-[11px] font-bold transition text-stone-500 hover:text-stone-800 dark:text-stone-400">
+                            Morning
+                        </button>
+                        <button id="filterLogEvening" onclick="setLogFilter('evening')" class="flex-1 py-1 rounded-lg text-[11px] font-bold transition text-stone-500 hover:text-stone-800 dark:text-stone-400">
+                            Evening
+                        </button>
+                    </div>
+
+                    <!-- Log Scrollable List -->
+                    <div id="logListContainer" class="flex-1 space-y-2 overflow-y-auto max-h-[380px] custom-scrollbar pr-1">
+                        <!-- Rendered by JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- MODAL: Canteen Order Slip -->
+    <div id="canteenSlipModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white dark:bg-earth-800 rounded-3xl max-w-md w-full p-6 shadow-2xl border border-stone-200/80 dark:border-stone-700/50 relative">
+            <div class="flex justify-between items-center mb-4 border-b pb-3 border-stone-100 dark:border-stone-700">
+                <h3 class="font-serif text-lg font-bold text-stone-800 dark:text-stone-100 flex items-center gap-2">
+                    <i data-lucide="receipt" class="w-5 h-5 text-sage-600"></i> Canteen Tea Order Slip
+                </h3>
+                <button id="closeCanteenSlipBtn" class="text-stone-400 hover:text-stone-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            
+            <p class="text-xs text-stone-500 dark:text-stone-400 mb-3">Copy this order summary to send to the school canteen or tea service staff:</p>
+            
+            <div class="bg-stone-50 dark:bg-earth-900 p-4 rounded-xl border border-stone-200 dark:border-stone-700 text-xs font-mono space-y-2 text-stone-800 dark:text-stone-200" id="canteenSlipText">
+                <!-- Dynamically filled by JS -->
+            </div>
+
+            <div class="flex gap-2 mt-5">
+                <button id="copyCanteenSlipBtn" class="flex-1 py-2.5 bg-sage-600 hover:bg-sage-700 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow-sm">
+                    <i data-lucide="copy" class="w-4 h-4"></i> Copy Slip Text
+                </button>
+                <button id="closeCanteenSlipModalBtn" class="py-2.5 px-4 bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 rounded-xl text-xs font-semibold transition">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Reset Day Confirmation -->
+    <div id="resetConfirmModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white dark:bg-earth-800 rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-stone-200/80 dark:border-stone-700/50">
+            <div class="flex items-center gap-3 text-rose-600 dark:text-rose-400 mb-3">
+                <div class="p-2.5 rounded-xl bg-rose-100 dark:bg-rose-950/60">
+                    <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+                </div>
+                <h3 class="font-serif text-lg font-bold text-stone-800 dark:text-stone-100">Reset Today's Tally?</h3>
+            </div>
+            <p class="text-xs text-stone-500 dark:text-stone-400 mb-5 leading-relaxed">
+                This will clear all logged drinks for today. Historical logs from previous days will remain safe.
+            </p>
+            <div class="flex items-center gap-2">
+                <button id="confirmResetBtn" class="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl transition">
+                    Yes, Reset Today
+                </button>
+                <button id="cancelResetBtn" class="py-2.5 px-4 bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 text-xs font-semibold rounded-xl transition">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const DRINKS = [
+            { id: 'tea', name: 'Milk Tea', icon: 'cup-soda' },
+            { id: 'plain_tea', name: 'Plain Tea', icon: 'coffee' },
+            { id: 'milk_coffee', name: 'Milk Coffee', icon: 'milk' }
+        ];
+
+        let state = {
+            className: 'Tea Count',
+            activeShift: 'morning', // 'morning' | 'evening'
+            logFilter: 'all',       // 'all' | 'morning' | 'evening'
+            recipientRole: 'Teacher',
+            logs: [],               // Array of { id, drinkId, shift, recipient, timestamp, dateStr }
+            theme: 'light'
+        };
+
+        let weeklyChartInstance = null;
+
+        function loadState() {
+            const saved = localStorage.getItem('teatally_classroom_data');
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    state.className = parsed.className || 'Classroom 10-A';
+                    state.activeShift = parsed.activeShift || 'morning';
+                    state.theme = parsed.theme || 'light';
+                    state.recipientRole = parsed.recipientRole || 'Teacher';
+                    state.logs = (parsed.logs || []).map(l => {
+                        let drinkId = l.drinkId || l.beverageId;
+                        if (drinkId === 'plaine_tea') drinkId = 'plain_tea';
+                        if (!['tea', 'plain_tea', 'milk_coffee'].includes(drinkId)) drinkId = 'tea';
+                        
+                        return {
+                            id: l.id || 'log_' + Date.now() + Math.random().toString(36).substr(2, 4),
+                            drinkId: drinkId,
+                            shift: l.shift || 'morning',
+                            recipient: l.recipient || 'Classroom',
+                            timestamp: l.timestamp || new Date().toISOString(),
+                            dateStr: l.dateStr || getTodayStr()
+                        };
+                    });
+                } catch (e) {
+                    console.error("Failed to parse storage", e);
+                }
+            }
+        }
+
+        function saveState() {
+            localStorage.setItem('teatally_classroom_data', JSON.stringify({
+                className: state.className,
+                activeShift: state.activeShift,
+                recipientRole: state.recipientRole,
+                logs: state.logs,
+                theme: state.theme
+            }));
+        }
+
+        function getTodayStr() {
+            const d = new Date();
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        }
+
+        function formatTime(isoString) {
+            const d = new Date(isoString);
+            return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function getTodayLogs() {
+            const today = getTodayStr();
+            return state.logs.filter(log => log.dateStr === today);
+        }
+
+        function initApp() {
+            loadState();
+            applyTheme(state.theme);
+            
+            const nameInput = document.getElementById('classNameInput');
+            if (nameInput) {
+                nameInput.value = state.className;
+                nameInput.addEventListener('input', (e) => {
+                    state.className = e.target.value || 'Classroom';
+                    saveState();
+                });
+            }
+
+            const recipientSel = document.getElementById('recipientSelect');
+            if (recipientSel) {
+                recipientSel.value = state.recipientRole;
+                recipientSel.addEventListener('change', (e) => {
+                    state.recipientRole = e.target.value;
+                    saveState();
+                });
+            }
+
+            setupShiftTabs();
+            setupCanteenSlipModal();
+            setupResetModal();
+            initWeeklyChart();
+            updateDashboard();
+
+            lucide.createIcons();
+        }
+
+        function applyTheme(theme) {
+            state.theme = theme;
+            const darkIcon = document.getElementById('themeIconDark');
+            const lightIcon = document.getElementById('themeIconLight');
+
+            if (theme === 'dark') {
+                document.documentElement.classList.add('dark');
+                if (darkIcon) darkIcon.classList.remove('hidden');
+                if (lightIcon) lightIcon.classList.add('hidden');
+            } else {
+                document.documentElement.classList.remove('dark');
+                if (darkIcon) darkIcon.classList.add('hidden');
+                if (lightIcon) lightIcon.classList.remove('hidden');
+            }
+            saveState();
+        }
+
+        document.getElementById('themeToggle')?.addEventListener('click', () => {
+            const newTheme = state.theme === 'light' ? 'dark' : 'light';
+            applyTheme(newTheme);
+        });
+
+        function setupShiftTabs() {
+            const morningBtn = document.getElementById('shiftMorningTab');
+            const eveningBtn = document.getElementById('shiftEveningTab');
+
+            if (morningBtn) {
+                morningBtn.addEventListener('click', () => {
+                    state.activeShift = 'morning';
+                    updateShiftTabsUI();
+                    renderShiftCounters();
+                    saveState();
+                });
+            }
+
+            if (eveningBtn) {
+                eveningBtn.addEventListener('click', () => {
+                    state.activeShift = 'evening';
+                    updateShiftTabsUI();
+                    renderShiftCounters();
+                    saveState();
+                });
+            }
+
+            updateShiftTabsUI();
+            renderShiftCounters();
+        }
+
+        function updateShiftTabsUI() {
+            const morningBtn = document.getElementById('shiftMorningTab');
+            const eveningBtn = document.getElementById('shiftEveningTab');
+
+            if (!morningBtn || !eveningBtn) return;
+
+            if (state.activeShift === 'morning') {
+                morningBtn.className = "flex-1 sm:flex-initial px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 bg-amber-500 text-white shadow-md shadow-amber-500/20";
+                eveningBtn.className = "flex-1 sm:flex-initial px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100";
+            } else {
+                morningBtn.className = "flex-1 sm:flex-initial px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100";
+                eveningBtn.className = "flex-1 sm:flex-initial px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 bg-indigoShift-600 text-white shadow-md shadow-indigoShift-600/20";
+            }
+        }
+
+        function renderShiftCounters() {
+            const container = document.getElementById('shiftDrinkCountersContainer');
+            if (!container) return;
+
+            const todayLogs = getTodayLogs();
+            const currentShiftLogs = todayLogs.filter(l => l.shift === state.activeShift);
+
+            container.innerHTML = DRINKS.map(drink => {
+                const count = currentShiftLogs.filter(l => l.drinkId === drink.id).length;
+                const isMorning = state.activeShift === 'morning';
+                
+                const themeBg = isMorning 
+                    ? 'bg-amber-50/70 dark:bg-amber-950/20 border-amber-200/80 dark:border-amber-900/40' 
+                    : 'bg-indigoShift-50/70 dark:bg-indigoShift-900/20 border-indigoShift-200/80 dark:border-indigoShift-800/40';
+                
+                const btnBg = isMorning ? 'bg-amber-500 hover:bg-amber-600' : 'bg-indigoShift-600 hover:bg-indigoShift-700';
+
+                return `
+                    <div class="p-5 rounded-2xl border ${themeBg} flex flex-col justify-between space-y-4 shadow-sm">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-2.5">
+                                <div class="p-2 rounded-xl bg-white dark:bg-earth-800 shadow-sm text-stone-700 dark:text-stone-200">
+                                    <i data-lucide="${drink.icon}" class="w-5 h-5"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-stone-800 dark:text-stone-100 text-sm">${drink.name}</h4>
+                                    <span class="text-[10px] font-semibold text-stone-400 uppercase tracking-wider">${state.activeShift === 'morning' ? 'Morning Break' : 'Afternoon Break'}</span>
+                                </div>
+                            </div>
+                            <span class="text-3xl font-bold font-serif text-stone-800 dark:text-stone-100">${count}</span>
+                        </div>
+
+                        <!-- Counter Controls -->
+                        <div class="pt-2 border-t border-stone-200/50 dark:border-stone-700/50">
+                            <div class="flex items-center gap-2">
+                                <button onclick="decrementDrink('${drink.id}', '${state.activeShift}')" class="w-1/3 py-2 rounded-xl bg-white dark:bg-earth-800 text-stone-700 dark:text-stone-200 font-bold border border-stone-200/80 dark:border-stone-700 hover:bg-stone-50 dark:hover:bg-earth-900 transition flex items-center justify-center gap-1 active:scale-95 text-xs">
+                                    <i data-lucide="minus" class="w-3.5 h-3.5"></i> -1
+                                </button>
+                                <button onclick="incrementDrink('${drink.id}', '${state.activeShift}')" class="w-2/3 py-2 rounded-xl ${btnBg} text-white font-bold transition flex items-center justify-center gap-1 shadow-sm active:scale-95 text-xs">
+                                    <i data-lucide="plus" class="w-3.5 h-3.5"></i> +1 Cup
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            lucide.createIcons();
+        }
+
+        function incrementDrink(drinkId, shift) {
+            const drink = DRINKS.find(d => d.id === drinkId);
+            if (!drink) return;
+
+            const newEntry = {
+                id: 'log_' + Date.now() + Math.random().toString(36).substr(2, 4),
+                drinkId: drink.id,
+                shift: shift,
+                timestamp: new Date().toISOString(),
+                dateStr: getTodayStr()
+            };
+            state.logs.unshift(newEntry);
+            updateDashboard();
+        }
+
+        function decrementDrink(drinkId, shift) {
+            const today = getTodayStr();
+            const index = state.logs.findIndex(l => l.dateStr === today && l.drinkId === drinkId && l.shift === shift);
+            if (index !== -1) {
+                state.logs.splice(index, 1);
+                updateDashboard();
+            }
+        }
+
+        function updateDashboard() {
+            const todayLogs = getTodayLogs();
+            const grandTotal = todayLogs.length;
+
+            const morningLogs = todayLogs.filter(l => l.shift === 'morning');
+            const eveningLogs = todayLogs.filter(l => l.shift === 'evening');
+
+            const grandDisp = document.getElementById('grandTotalDisplay');
+            const mornDisp = document.getElementById('morningTotalDisplay');
+            const eveDisp = document.getElementById('eveningTotalDisplay');
+
+            if (grandDisp) grandDisp.innerText = grandTotal;
+            if (mornDisp) mornDisp.innerText = morningLogs.length;
+            if (eveDisp) eveDisp.innerText = eveningLogs.length;
+
+            const mornSub = document.getElementById('morningBreakdownSub');
+            const eveSub = document.getElementById('eveningBreakdownSub');
+            if (mornSub) mornSub.innerText = getSubBreakdownText(morningLogs);
+            if (eveSub) eveSub.innerText = getSubBreakdownText(eveningLogs);
+
+            renderShiftCounters();
+            renderShiftDistributions(morningLogs, eveningLogs);
+            renderLogList(todayLogs);
+            updateWeeklyChart();
+
+            saveState();
+        }
+
+        function getSubBreakdownText(shiftLogs) {
+            const tea = shiftLogs.filter(l => l.drinkId === 'tea').length;
+            const plain = shiftLogs.filter(l => l.drinkId === 'plain_tea').length;
+            const coffee = shiftLogs.filter(l => l.drinkId === 'milk_coffee').length;
+            return `Tea: ${tea} | Plain: ${plain} | Coffee: ${coffee}`;
+        }
+
+        function renderShiftDistributions(morningLogs, eveningLogs) {
+            const mBadge = document.getElementById('mShiftBadgeCount');
+            const eBadge = document.getElementById('eShiftBadgeCount');
+            if (mBadge) mBadge.innerText = `${morningLogs.length} cups`;
+            if (eBadge) eBadge.innerText = `${eveningLogs.length} cups`;
+
+            const mDist = document.getElementById('morningShiftDistribution');
+            const eDist = document.getElementById('eveningShiftDistribution');
+            if (mDist) mDist.innerHTML = renderShiftBarGroup(morningLogs);
+            if (eDist) eDist.innerHTML = renderShiftBarGroup(eveningLogs);
+        }
+
+        function renderShiftBarGroup(shiftLogs) {
+            const total = shiftLogs.length || 1;
+            return DRINKS.map(drink => {
+                const count = shiftLogs.filter(l => l.drinkId === drink.id).length;
+                const percentage = Math.round((count / total) * 100);
+                return `
+                    <div>
+                        <div class="flex justify-between font-medium text-stone-600 dark:text-stone-300">
+                            <span>${drink.name}</span>
+                            <span>${count} (${shiftLogs.length ? percentage : 0}%)</span>
+                        </div>
+                        <div class="w-full h-1.5 bg-stone-200/60 dark:bg-stone-700/60 rounded-full overflow-hidden mt-1">
+                            <div class="h-full bg-sage-500 rounded-full transition-all duration-300" style="width: ${shiftLogs.length ? percentage : 0}%"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function setLogFilter(filter) {
+            state.logFilter = filter;
+            
+            const btnAll = document.getElementById('filterLogAll');
+            const btnMorn = document.getElementById('filterLogMorning');
+            const btnEve = document.getElementById('filterLogEvening');
+
+            const activeClass = "flex-1 py-1 rounded-lg text-[11px] font-bold transition bg-stone-200 dark:bg-stone-700 text-stone-800 dark:text-stone-100 shadow-sm";
+            const inactiveClass = "flex-1 py-1 rounded-lg text-[11px] font-bold transition text-stone-500 hover:text-stone-800 dark:text-stone-400";
+
+            if (btnAll) btnAll.className = filter === 'all' ? activeClass : inactiveClass;
+            if (btnMorn) btnMorn.className = filter === 'morning' ? activeClass : inactiveClass;
+            if (btnEve) btnEve.className = filter === 'evening' ? activeClass : inactiveClass;
+
+            renderLogList(getTodayLogs());
+        }
+
+        function renderLogList(todayLogs) {
+            const badge = document.getElementById('logCountBadge');
+            const container = document.getElementById('logListContainer');
+
+            if (!container) return;
+
+            let filteredLogs = todayLogs;
+            if (state.logFilter === 'morning') {
+                filteredLogs = todayLogs.filter(l => l.shift === 'morning');
+            } else if (state.logFilter === 'evening') {
+                filteredLogs = todayLogs.filter(l => l.shift === 'evening');
+            }
+
+            if (badge) {
+                badge.innerText = `${filteredLogs.length} Entries`;
+            }
+
+            if (filteredLogs.length === 0) {
+                container.innerHTML = `
+                    <div class="h-48 flex flex-col items-center justify-center text-stone-400 dark:text-stone-500">
+                        <i data-lucide="coffee" class="w-10 h-10 stroke-1 mb-2 opacity-60"></i>
+                        <p class="text-xs font-medium">No drink logs for this selection.</p>
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            container.innerHTML = filteredLogs.map(log => {
+                const drink = DRINKS.find(d => d.id === log.drinkId) || DRINKS[0];
+                const isMorning = log.shift === 'morning';
+                const badgeClass = isMorning 
+                    ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300' 
+                    : 'bg-indigoShift-100 text-indigoShift-800 dark:bg-indigoShift-950/60 dark:text-indigoShift-300';
+
+                return `
+                    <div class="flex items-center justify-between p-3 bg-stone-50 dark:bg-earth-900/60 rounded-xl border border-stone-200/50 dark:border-stone-700/40 text-xs">
+                        <div class="flex items-center space-x-3">
+                            <div class="p-1.5 rounded-lg bg-white dark:bg-earth-800 text-stone-700 dark:text-stone-300 shadow-sm">
+                                <i data-lucide="${drink.icon}" class="w-4 h-4"></i>
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-1.5">
+                                    <p class="font-bold text-stone-800 dark:text-stone-200">${drink.name}</p>
+                                    <span class="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded ${badgeClass}">
+                                        ${log.shift === 'morning' ? 'Morning' : 'Afternoon'}
+                                    </span>
+                                </div>
+                                <p class="text-[10px] text-stone-400 mt-0.5">${formatTime(log.timestamp)}</p>
+                            </div>
+                        </div>
+                        <button onclick="removeSingleLog('${log.id}')" class="text-stone-400 hover:text-rose-500 transition p-1.5 rounded-lg hover:bg-stone-200/50 dark:hover:bg-stone-800" title="Delete log">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                `;
+            }).join('');
+
+            lucide.createIcons();
+        }
+
+        function removeSingleLog(logId) {
+            state.logs = state.logs.filter(l => l.id !== logId);
+            updateDashboard();
+        }
+
+        function setupCanteenSlipModal() {
+            const modal = document.getElementById('canteenSlipModal');
+            const openBtn = document.getElementById('openCanteenSlipBtn');
+            const closeBtn = document.getElementById('closeCanteenSlipBtn');
+            const closeModalBtn = document.getElementById('closeCanteenSlipModalBtn');
+            const copyBtn = document.getElementById('copyCanteenSlipBtn');
+
+            if (!modal) return;
+
+            if (openBtn) {
+                openBtn.addEventListener('click', () => {
+                    generateCanteenSlipText();
+                    modal.classList.remove('hidden');
+                });
+            }
+
+            const hideModal = () => modal.classList.add('hidden');
+            if (closeBtn) closeBtn.addEventListener('click', hideModal);
+            if (closeModalBtn) closeModalBtn.addEventListener('click', hideModal);
+
+            if (copyBtn) {
+                copyBtn.addEventListener('click', () => {
+                    const textEl = document.getElementById('canteenSlipText');
+                    if (!textEl) return;
+                    
+                    const text = textEl.innerText;
+                    const textarea = document.createElement('textarea');
+                    textarea.value = text;
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textarea);
+
+                    copyBtn.innerHTML = `<i data-lucide="check" class="w-4 h-4"></i> Copied!`;
+                    lucide.createIcons();
+                    setTimeout(() => {
+                        copyBtn.innerHTML = `<i data-lucide="copy" class="w-4 h-4"></i> Copy Slip Text`;
+                        lucide.createIcons();
+                    }, 2000);
+                });
+            }
+        }
+
+        function generateCanteenSlipText() {
+            const todayLogs = getTodayLogs();
+            const morningLogs = todayLogs.filter(l => l.shift === 'morning');
+            const eveningLogs = todayLogs.filter(l => l.shift === 'evening');
+
+            const getCounts = (logs) => {
+                const tea = logs.filter(l => l.drinkId === 'tea').length;
+                const plain = logs.filter(l => l.drinkId === 'plain_tea').length;
+                const coffee = logs.filter(l => l.drinkId === 'milk_coffee').length;
+                return { tea, plain, coffee, total: logs.length };
+            };
+
+            const m = getCounts(morningLogs);
+            const e = getCounts(eveningLogs);
+            const total = todayLogs.length;
+
+            const slipEl = document.getElementById('canteenSlipText');
+            if (slipEl) {
+                slipEl.innerHTML = `
+                    <div><strong>📍 LOCATION:</strong> ${state.className}</div>
+                    <div><strong>📅 DATE:</strong> ${new Date().toLocaleDateString()}</div>
+                    <div class="my-2 border-b border-dashed border-stone-300 dark:border-stone-700"></div>
+                    <div><strong>☕ MORNING BREAK ORDER (${m.total} cups):</strong></div>
+                    <div> • Milk Tea: ${m.tea}</div>
+                    <div> • Plain Tea: ${m.plain}</div>
+                    <div> • Milk Coffee: ${m.coffee}</div>
+                    <div class="my-2 border-b border-dashed border-stone-300 dark:border-stone-700"></div>
+                    <div><strong>☕ AFTERNOON BREAK ORDER (${e.total} cups):</strong></div>
+                    <div> • Milk Tea: ${e.tea}</div>
+                    <div> • Plain Tea: ${e.plain}</div>
+                    <div> • Milk Coffee: ${e.coffee}</div>
+                    <div class="my-2 border-b border-dashed border-stone-300 dark:border-stone-700"></div>
+                    <div><strong>📊 GRAND TOTAL ORDER:</strong> ${total} Cups</div>
+                `;
+            }
+        }
+
+        function setupResetModal() {
+            const resetBtn = document.getElementById('resetTodayBtn');
+            const resetModal = document.getElementById('resetConfirmModal');
+            const confirmBtn = document.getElementById('confirmResetBtn');
+            const cancelBtn = document.getElementById('cancelResetBtn');
+
+            if (!resetModal) return;
+
+            if (resetBtn) {
+                resetBtn.addEventListener('click', () => {
+                    resetModal.classList.remove('hidden');
+                });
+            }
+
+            const hideResetModal = () => resetModal.classList.add('hidden');
+
+            if (cancelBtn) cancelBtn.addEventListener('click', hideResetModal);
+
+            if (confirmBtn) {
+                confirmBtn.addEventListener('click', () => {
+                    const today = getTodayStr();
+                    state.logs = state.logs.filter(l => l.dateStr !== today);
+                    updateDashboard();
+                    hideResetModal();
+                });
+            }
+        }
+
+        function initWeeklyChart() {
+            const canvas = document.getElementById('weeklyShiftChart');
+            if (!canvas) return;
+
+            const ctx = canvas.getContext('2d');
+            
+            weeklyChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: 'Morning Break',
+                            data: [],
+                            backgroundColor: '#f59e0b',
+                            borderRadius: 6
+                        },
+                        {
+                            label: 'Evening Break',
+                            data: [],
+                            backgroundColor: '#6366f1',
+                            borderRadius: 6
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { 
+                            display: true, 
+                            position: 'top',
+                            labels: { color: '#a8a29e', font: { size: 11 } } 
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { precision: 0, color: '#a8a29e' },
+                            grid: { color: 'rgba(168, 162, 158, 0.1)' }
+                        },
+                        x: {
+                            ticks: { color: '#a8a29e' },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+
+            updateWeeklyChart();
+        }
+
+        function updateWeeklyChart() {
+            if (!weeklyChartInstance) return;
+
+            const days = [];
+            const morningData = [];
+            const eveningData = [];
+            const today = new Date();
+
+            for (let i = 6; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(today.getDate() - i);
+                const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                const label = d.toLocaleDateString([], { weekday: 'short' });
+
+                const dayLogs = state.logs.filter(l => l.dateStr === dateStr);
+                const mCount = dayLogs.filter(l => l.shift === 'morning').length;
+                const eCount = dayLogs.filter(l => l.shift === 'evening').length;
+
+                days.push(label);
+                morningData.push(mCount);
+                eveningData.push(eCount);
+            }
+
+            weeklyChartInstance.data.labels = days;
+            weeklyChartInstance.data.datasets[0].data = morningData;
+            weeklyChartInstance.data.datasets[1].data = eveningData;
+            weeklyChartInstance.update();
+        }
+
+        window.onload = initApp;
+    </script>
+</body>
+</html>
